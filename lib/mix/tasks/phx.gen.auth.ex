@@ -273,149 +273,181 @@ defmodule Mix.Tasks.Phx.Gen.Auth do
       ]
     ]
 
-    case Keyword.fetch(context.opts, :live) do
+    case Keyword.fetch(context.opts, :api) do
       {:ok, true} ->
-        live_files = [
-          "registration_live.ex": [web_pre, "live", web_path, "#{singular}_registration_live.ex"],
-          "registration_live_test.exs": [
-            web_test_pre,
-            "live",
-            web_path,
-            "#{singular}_registration_live_test.exs"
-          ],
-          "login_live.ex": [web_pre, "live", web_path, "#{singular}_login_live.ex"],
-          "login_live_test.exs": [
-            web_test_pre,
-            "live",
-            web_path,
-            "#{singular}_login_live_test.exs"
-          ],
-          "reset_password_live.ex": [
-            web_pre,
-            "live",
-            web_path,
-            "#{singular}_reset_password_live.ex"
-          ],
-          "reset_password_live_test.exs": [
-            web_test_pre,
-            "live",
-            web_path,
-            "#{singular}_reset_password_live_test.exs"
-          ],
-          "forgot_password_live.ex": [
-            web_pre,
-            "live",
-            web_path,
-            "#{singular}_forgot_password_live.ex"
-          ],
-          "forgot_password_live_test.exs": [
-            web_test_pre,
-            "live",
-            web_path,
-            "#{singular}_forgot_password_live_test.exs"
-          ],
-          "settings_live.ex": [web_pre, "live", web_path, "#{singular}_settings_live.ex"],
-          "settings_live_test.exs": [
-            web_test_pre,
-            "live",
-            web_path,
-            "#{singular}_settings_live_test.exs"
-          ],
-          "confirmation_live.ex": [web_pre, "live", web_path, "#{singular}_confirmation_live.ex"],
-          "confirmation_live_test.exs": [
-            web_test_pre,
-            "live",
-            web_path,
-            "#{singular}_confirmation_live_test.exs"
-          ],
-          "confirmation_instructions_live.ex": [
-            web_pre,
-            "live",
-            web_path,
-            "#{singular}_confirmation_instructions_live.ex"
-          ],
-          "confirmation_instructions_live_test.exs": [
-            web_test_pre,
-            "live",
-            web_path,
-            "#{singular}_confirmation_instructions_live_test.exs"
-          ]
-        ]
-
-        remap_files(default_files ++ live_files)
+        api_files = []
+        remap_files(default_files ++ api_files)
 
       _ ->
-        non_live_files = [
-          "confirmation_html.ex": [controller_pre, "#{singular}_confirmation_html.ex"],
-          "confirmation_new.html.heex": [
-            controller_pre,
-            "#{singular}_confirmation_html",
-            "new.html.heex"
-          ],
-          "confirmation_edit.html.heex": [
-            controller_pre,
-            "#{singular}_confirmation_html",
-            "edit.html.heex"
-          ],
-          "confirmation_controller.ex": [controller_pre, "#{singular}_confirmation_controller.ex"],
-          "confirmation_controller_test.exs": [
-            web_test_pre,
-            "controllers",
-            web_path,
-            "#{singular}_confirmation_controller_test.exs"
-          ],
-          "registration_new.html.heex": [
-            controller_pre,
-            "#{singular}_registration_html",
-            "new.html.heex"
-          ],
-          "registration_controller.ex": [controller_pre, "#{singular}_registration_controller.ex"],
-          "registration_controller_test.exs": [
-            web_test_pre,
-            "controllers",
-            web_path,
-            "#{singular}_registration_controller_test.exs"
-          ],
-          "registration_html.ex": [controller_pre, "#{singular}_registration_html.ex"],
-          "reset_password_html.ex": [controller_pre, "#{singular}_reset_password_html.ex"],
-          "reset_password_controller.ex": [
-            controller_pre,
-            "#{singular}_reset_password_controller.ex"
-          ],
-          "reset_password_controller_test.exs": [
-            web_test_pre,
-            "controllers",
-            web_path,
-            "#{singular}_reset_password_controller_test.exs"
-          ],
-          "reset_password_edit.html.heex": [
-            controller_pre,
-            "#{singular}_reset_password_html",
-            "edit.html.heex"
-          ],
-          "reset_password_new.html.heex": [
-            controller_pre,
-            "#{singular}_reset_password_html",
-            "new.html.heex"
-          ],
-          "session_html.ex": [controller_pre, "#{singular}_session_html.ex"],
-          "session_new.html.heex": [controller_pre, "#{singular}_session_html", "new.html.heex"],
-          "settings_html.ex": [web_pre, "controllers", web_path, "#{singular}_settings_html.ex"],
-          "settings_controller.ex": [controller_pre, "#{singular}_settings_controller.ex"],
-          "settings_edit.html.heex": [
-            controller_pre,
-            "#{singular}_settings_html",
-            "edit.html.heex"
-          ],
-          "settings_controller_test.exs": [
-            web_test_pre,
-            "controllers",
-            web_path,
-            "#{singular}_settings_controller_test.exs"
-          ]
-        ]
+        case Keyword.fetch(context.opts, :live) do
+          {:ok, true} ->
+            live_files = [
+              "registration_live.ex": [
+                web_pre,
+                "live",
+                web_path,
+                "#{singular}_registration_live.ex"
+              ],
+              "registration_live_test.exs": [
+                web_test_pre,
+                "live",
+                web_path,
+                "#{singular}_registration_live_test.exs"
+              ],
+              "login_live.ex": [web_pre, "live", web_path, "#{singular}_login_live.ex"],
+              "login_live_test.exs": [
+                web_test_pre,
+                "live",
+                web_path,
+                "#{singular}_login_live_test.exs"
+              ],
+              "reset_password_live.ex": [
+                web_pre,
+                "live",
+                web_path,
+                "#{singular}_reset_password_live.ex"
+              ],
+              "reset_password_live_test.exs": [
+                web_test_pre,
+                "live",
+                web_path,
+                "#{singular}_reset_password_live_test.exs"
+              ],
+              "forgot_password_live.ex": [
+                web_pre,
+                "live",
+                web_path,
+                "#{singular}_forgot_password_live.ex"
+              ],
+              "forgot_password_live_test.exs": [
+                web_test_pre,
+                "live",
+                web_path,
+                "#{singular}_forgot_password_live_test.exs"
+              ],
+              "settings_live.ex": [web_pre, "live", web_path, "#{singular}_settings_live.ex"],
+              "settings_live_test.exs": [
+                web_test_pre,
+                "live",
+                web_path,
+                "#{singular}_settings_live_test.exs"
+              ],
+              "confirmation_live.ex": [
+                web_pre,
+                "live",
+                web_path,
+                "#{singular}_confirmation_live.ex"
+              ],
+              "confirmation_live_test.exs": [
+                web_test_pre,
+                "live",
+                web_path,
+                "#{singular}_confirmation_live_test.exs"
+              ],
+              "confirmation_instructions_live.ex": [
+                web_pre,
+                "live",
+                web_path,
+                "#{singular}_confirmation_instructions_live.ex"
+              ],
+              "confirmation_instructions_live_test.exs": [
+                web_test_pre,
+                "live",
+                web_path,
+                "#{singular}_confirmation_instructions_live_test.exs"
+              ]
+            ]
 
-        remap_files(default_files ++ non_live_files)
+            remap_files(default_files ++ live_files)
+
+          _ ->
+            non_live_files = [
+              "confirmation_html.ex": [controller_pre, "#{singular}_confirmation_html.ex"],
+              "confirmation_new.html.heex": [
+                controller_pre,
+                "#{singular}_confirmation_html",
+                "new.html.heex"
+              ],
+              "confirmation_edit.html.heex": [
+                controller_pre,
+                "#{singular}_confirmation_html",
+                "edit.html.heex"
+              ],
+              "confirmation_controller.ex": [
+                controller_pre,
+                "#{singular}_confirmation_controller.ex"
+              ],
+              "confirmation_controller_test.exs": [
+                web_test_pre,
+                "controllers",
+                web_path,
+                "#{singular}_confirmation_controller_test.exs"
+              ],
+              "registration_new.html.heex": [
+                controller_pre,
+                "#{singular}_registration_html",
+                "new.html.heex"
+              ],
+              "registration_controller.ex": [
+                controller_pre,
+                "#{singular}_registration_controller.ex"
+              ],
+              "registration_controller_test.exs": [
+                web_test_pre,
+                "controllers",
+                web_path,
+                "#{singular}_registration_controller_test.exs"
+              ],
+              "registration_html.ex": [controller_pre, "#{singular}_registration_html.ex"],
+              "reset_password_html.ex": [controller_pre, "#{singular}_reset_password_html.ex"],
+              "reset_password_controller.ex": [
+                controller_pre,
+                "#{singular}_reset_password_controller.ex"
+              ],
+              "reset_password_controller_test.exs": [
+                web_test_pre,
+                "controllers",
+                web_path,
+                "#{singular}_reset_password_controller_test.exs"
+              ],
+              "reset_password_edit.html.heex": [
+                controller_pre,
+                "#{singular}_reset_password_html",
+                "edit.html.heex"
+              ],
+              "reset_password_new.html.heex": [
+                controller_pre,
+                "#{singular}_reset_password_html",
+                "new.html.heex"
+              ],
+              "session_html.ex": [controller_pre, "#{singular}_session_html.ex"],
+              "session_new.html.heex": [
+                controller_pre,
+                "#{singular}_session_html",
+                "new.html.heex"
+              ],
+              "settings_html.ex": [
+                web_pre,
+                "controllers",
+                web_path,
+                "#{singular}_settings_html.ex"
+              ],
+              "settings_controller.ex": [controller_pre, "#{singular}_settings_controller.ex"],
+              "settings_edit.html.heex": [
+                controller_pre,
+                "#{singular}_settings_html",
+                "edit.html.heex"
+              ],
+              "settings_controller_test.exs": [
+                web_test_pre,
+                "controllers",
+                web_path,
+                "#{singular}_settings_controller_test.exs"
+              ]
+            ]
+
+            remap_files(default_files ++ non_live_files)
+        end
     end
   end
 
