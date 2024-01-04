@@ -489,6 +489,150 @@ defmodule Mix.Tasks.Phx.Gen.AuthTest do
     end)
   end
 
+  @tag :skip
+  test "works with apps generated with --no-html", config do
+    in_tmp_phx_project(config.test, ~w(--no-html), fn ->
+      Gen.Auth.run(
+        ~w(Accounts User users),
+        ecto_adapter: Ecto.Adapters.Postgres,
+        validate_dependencies?: false
+      )
+
+      assert_file("config/test.exs", fn file ->
+        assert file =~ "config :bcrypt_elixir, :log_rounds, 1"
+      end)
+
+      assert_file("lib/my_app/accounts.ex", fn file ->
+        assert file =~ "def create_user_api_token(user) do"
+        assert file =~ "def delete_user_api_token(token) do"
+        assert file =~ "def fetch_user_by_api_token(token) do"
+      end)
+
+      assert_file("lib/my_app/accounts/user.ex")
+
+      assert_file("lib/my_app/accounts/user_token.ex", fn file ->
+        assert file =~ "defp days_for_context(\"api-token\"), do: @session_validity_in_days"
+      end)
+
+      assert_file("lib/my_app/accounts/user_notifier.ex", fn file ->
+        assert file =~ "defmodule MyApp.Accounts.UserNotifier do"
+        assert file =~ "import Swoosh.Email"
+        assert file =~ "Mailer.deliver(email)"
+        assert file =~ ~s|from({"MyApp", "contact@example.com"})|
+        assert file =~ ~s|deliver(user.email, "Confirmation instructions",|
+        assert file =~ ~s|deliver(user.email, "Reset password instructions",|
+        assert file =~ ~s|deliver(user.email, "Update email instructions",|
+      end)
+
+      assert_file("test/my_app/accounts_test.exs")
+      assert_file("test/support/fixtures/accounts_fixtures.ex")
+
+      assert_file("lib/my_app_web/user_auth.ex", fn file ->
+        assert file =~ "def fetch_api_user(conn, _opts) do"
+        assert file =~ "def ignore_if_user_is_authenticated(conn, _opt) do"
+      end)
+
+      assert_file("test/my_app_web/user_auth_test.exs")
+
+      assert_file("lib/my_app_web/controllers/fallback_controller.ex")
+      assert_file("lib/my_app_web/controllers/changeset_json.ex")
+
+      assert_file("lib/my_app_web/controllers/user_registration_controller.ex", fn file ->
+        assert file =~ "render(:create, %{token: token})"
+      end)
+
+      assert_file("test/my_app_web/controllers/user_registration_controller_test.exs", fn file ->
+        assert file =~ "post(conn, ~p\"/api/users/register\""
+        assert file =~ " {:ok, user} = MyApp.Accounts.fetch_user_by_api_token(access_token)"
+        assert file =~ "assert user.email == \"test@example.com\""
+      end)
+
+      assert_file("lib/my_app_web/controllers/user_registration_json.ex", fn file ->
+        assert file =~ "defmodule MyAppWeb.UserRegistrationJSON do"
+        assert file =~ "def create(%{token: token}) do"
+      end)
+
+      assert_file("lib/my_app_web/controllers/user_session_controller.ex", fn file ->
+        assert file =~ "if user = Accounts.get_user_by_email_and_password(email, password) do"
+        assert file =~ "render(:create, %{token: token})"
+      end)
+
+      assert_file("test/my_app_web/controllers/user_session_controller_test.exs", fn file ->
+        assert file =~ "post(conn, ~p\"/api/users/log_in\""
+        assert file =~ " {:ok, logged_user} = MyApp.Accounts.fetch_user_by_api_token(access_token)"
+        assert file =~ "assert user.email == logged_user.email"
+        assert file =~ "delete_conn = delete(delete_conn, ~p\"/api/users/log_out\")"
+      end)
+
+      assert_file("lib/my_app_web/controllers/user_session_json.ex", fn file ->
+        assert file =~ "defmodule MyAppWeb.UserSessionJSON do"
+        assert file =~ "def create(%{token: token}) do"
+      end)
+
+      assert_file("lib/my_app_web/controllers/user_confirmation_controller.ex", fn file ->
+        assert file =~ "Accounts.deliver_user_confirmation_instructions"
+        assert file =~ "Accounts.confirm_user(token)"
+      end)
+
+      assert_file("test/my_app_web/controllers/user_confirmation_controller_test.exs", fn file ->
+        assert file =~ "post(conn, ~p\"/api/users/confirm\""
+        assert file =~ "assert message =~ \"If your email is in our system\""
+        assert file =~ "assert message == \"User confirmed successfully.\""
+        assert file =~ "assert message == \"User confirmation link is invalid or it has expired.\""
+      end)
+
+      assert_file("lib/my_app_web/controllers/user_confirmation_json.ex", fn file ->
+        assert file =~ "defmodule MyAppWeb.UserConfirmationJSON do"
+        assert file =~ "def create(%{message: message}) do"
+        assert file =~ "def error(%{message: message}) do"
+      end)
+      # TO DO: check the other controllers and views
+
+      assert [migration] = Path.wildcard("priv/repo/migrations/*_create_users_auth_tables.exs")
+
+      assert_file(migration, fn file ->
+        assert file =~ "create table(:users) do"
+        assert file =~ "create table(:users_tokens) do"
+      end)
+
+      assert_file("mix.exs", fn file ->
+        assert file =~ ~s|{:bcrypt_elixir, "~> 3.0"},|
+      end)
+
+      assert_file("lib/my_app_web/router.ex", fn file ->
+        assert file =~ "import MyAppWeb.UserAuth"
+
+        assert file =~ """
+                 ## Authentication routes
+
+                 scope "/api", MyAppWeb do
+                   pipe_through [:api, :ignore_if_user_is_authenticated]
+
+                   post "/users/register", UserRegistrationController, :create
+                   post "/users/log_in", UserSessionController, :create
+                   # post "/users/reset_password", UserResetPasswordController, :create
+                   # put "/users/reset_password/:token", UserResetPasswordController, :update
+                 end
+
+                 # scope "/api", MyAppWeb do
+                 #   pipe_through [:api, :fetch_api_user]
+
+                 #   put "/users/settings", UserSettingsController, :update
+                 #   get "/users/settings/confirm_email/:token", UserSettingsController, :confirm_email
+                 # end
+
+                 scope "/api", MyAppWeb do
+                   pipe_through [:api]
+
+                   delete "/users/log_out", UserSessionController, :delete
+                   post "/users/confirm", UserConfirmationController, :create
+                   post "/users/confirm/:token", UserConfirmationController, :update
+                 end
+               """
+      end)
+    end)
+  end
+
   test "generates with --web option", config do
     in_tmp_phx_project(config.test, fn ->
       send self(), {:mix_shell_input, :yes?, false}
@@ -1376,10 +1520,9 @@ defmodule Mix.Tasks.Phx.Gen.AuthTest do
           * lib/my_app_web/components/layouts/root.html.heex
           * lib/my_app_web/components/layouts/app.html.heex
 
-        Please ensure this phoenix app was not generated with
-        --no-html. If you have changed the name of your application
-        layout file, please add the following code to it where you'd
-        like the user menu items to be rendered.
+        If you have changed the name of your application layout file,
+        please add the following code to it where you'd like the
+        user menu items to be rendered.
 
             <ul class="relative z-10 flex items-center gap-4 px-4 sm:px-6 lg:px-8 justify-end">
               <%= if @current_user do %>
