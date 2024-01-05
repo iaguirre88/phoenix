@@ -171,7 +171,8 @@ defmodule Mix.Tasks.Phx.Gen.Auth do
       router_scope: router_scope(context),
       web_path_prefix: web_path_prefix(schema),
       test_case_options: test_case_options(ecto_adapter),
-      live?: Keyword.fetch!(context.opts, :live)
+      live?: Keyword.fetch!(context.opts, :live),
+      api?: Keyword.fetch!(context.opts, :api)
     ]
 
     paths = generator_paths()
@@ -742,13 +743,23 @@ defmodule Mix.Tasks.Phx.Gen.Auth do
     context
   end
 
-  defp router_scope(%Context{schema: schema} = context) do
+  defp router_scope(%Context{schema: schema, opts: opts} = context) do
     prefix = Module.concat(context.web_module, schema.web_namespace)
 
-    if schema.web_namespace do
-      ~s|"/#{schema.web_path}", #{inspect(prefix)}, as: :#{schema.web_path}|
-    else
-      ~s|"/", #{inspect(context.web_module)}|
+    case Keyword.fetch(opts, :api) do
+      {:ok, true} ->
+        if schema.web_namespace do
+          ~s|"/#{schema.web_path}/api", #{inspect(prefix)}, as: :#{schema.web_path}|
+        else
+          ~s|"/api", #{inspect(context.web_module)}|
+        end
+
+      _ ->
+        if schema.web_namespace do
+          ~s|"/#{schema.web_path}", #{inspect(prefix)}, as: :#{schema.web_path}|
+        else
+          ~s|"/", #{inspect(context.web_module)}|
+        end
     end
   end
 
