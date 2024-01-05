@@ -219,6 +219,40 @@
   end
 
   @doc """
+  Creates a new api token for a <%= schema.singular %>.
+
+  The token returned must be saved somewhere safe.
+  This token cannot be recovered from the database.
+  """
+  def create_<%= schema.singular %>_api_token(<%= schema.singular %>) do
+    # TODO this should be a confirm token and changed to api-token when confirmed
+    # TODO this function should be included only if api? is true
+    {encoded_token, <%= schema.singular %>_token} = <%= inspect schema.alias %>Token.build_email_token(<%= schema.singular %>, "api-token")
+    Repo.insert!(<%= schema.singular %>_token)
+    encoded_token
+  end
+
+  @doc """
+  Deletes the signed token with the given context.
+  """
+  def delete_<%= schema.singular %>_api_token(token) do
+    Repo.delete_all(<%= inspect schema.alias %>Token.by_decoded_token_and_context_query(token, "api-token"))
+    :ok
+  end
+
+  @doc """
+  Fetches the <%= schema.singular %> by API token.
+  """
+  def fetch_<%= schema.singular %>_by_api_token(token) do
+    with {:ok, query} <- <%= inspect schema.alias %>Token.verify_email_token_query(token, "api-token"),
+         %<%= inspect schema.alias %>{} = <%= schema.singular %> <- Repo.one(query) do
+      {:ok, <%= schema.singular %>}
+    else
+      _ -> :error
+    end
+  end
+
+  @doc """
   Gets the <%= schema.singular %> with the given signed token.
   """
   def get_<%= schema.singular %>_by_session_token(token) do
