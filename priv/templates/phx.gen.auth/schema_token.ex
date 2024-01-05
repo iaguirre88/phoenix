@@ -130,6 +130,7 @@ defmodule <%= inspect schema.module %>Token do
 
   defp days_for_context("confirm"), do: @confirm_validity_in_days
   defp days_for_context("reset_password"), do: @reset_password_validity_in_days
+  defp days_for_context("api-token"), do: @session_validity_in_days
 
   @doc """
   Checks if the token is valid and returns its underlying lookup query.
@@ -166,6 +167,21 @@ defmodule <%= inspect schema.module %>Token do
   """
   def by_token_and_context_query(token, context) do
     from <%= inspect schema.alias %>Token, where: [token: ^token, context: ^context]
+  end
+
+  @doc """
+  Returns the hashed token struct for the given
+  decoded token value and context.
+  """
+  def by_decoded_token_and_context_query(token, context) do
+    case Base.url_decode64(token, padding: false) do
+      {:ok, decoded_token} ->
+        hashed_token = :crypto.hash(@hash_algorithm, decoded_token)
+        from <%= inspect schema.alias %>Token, where: [token: ^hashed_token, context: ^context]
+
+      :error ->
+        :error
+    end
   end
 
   @doc """
