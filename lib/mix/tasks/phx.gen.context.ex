@@ -88,10 +88,11 @@ defmodule Mix.Tasks.Phx.Gen.Context do
     context_app: :string,
     merge_with_existing_context: :boolean,
     prefix: :string,
-    live: :boolean
+    live: :boolean,
+    api: :boolean
   ]
 
-  @default_opts [schema: true, context: true]
+  @default_opts [schema: true, context: true, api: false]
 
   @doc false
   def run(args) do

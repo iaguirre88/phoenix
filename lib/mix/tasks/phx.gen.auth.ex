@@ -26,6 +26,8 @@ defmodule Mix.Tasks.Phx.Gen.Auth do
   to authentication views without necessarily triggering a new HTTP request
   each time (which would result in a full page load).
 
+  Those options will be ignored if the app was generated with `--no-html`.
+
   ## Password hashing
 
   The password hashing mechanism defaults to `bcrypt` for
@@ -116,7 +118,8 @@ defmodule Mix.Tasks.Phx.Gen.Auth do
     table: :string,
     merge_with_existing_context: :boolean,
     prefix: :string,
-    live: :boolean
+    live: :boolean,
+    api: :boolean
   ]
 
   @doc false
@@ -133,7 +136,8 @@ defmodule Mix.Tasks.Phx.Gen.Auth do
 
     {context, schema} = Gen.Context.build(context_args, __MODULE__)
 
-    context = put_live_option(context)
+    context =
+      if generated_with_no_html?(), do: put_api_option(context), else: put_live_option(context)
 
     Gen.Context.prompt_for_code_injection(context)
 
@@ -202,10 +206,6 @@ defmodule Mix.Tasks.Phx.Gen.Auth do
   defp validate_required_dependencies! do
     unless Code.ensure_loaded?(Ecto.Adapters.SQL) do
       raise_with_help("mix phx.gen.auth requires ecto_sql", :phx_generator_args)
-    end
-
-    if generated_with_no_html?() do
-      raise_with_help("mix phx.gen.auth requires phoenix_html", :phx_generator_args)
     end
   end
 
@@ -592,49 +592,54 @@ defmodule Mix.Tasks.Phx.Gen.Auth do
   end
 
   defp maybe_inject_app_layout_menu(%Context{} = context) do
-    schema = context.schema
+    api? = Keyword.get(context.opts, :api, false)
 
-    if file_path = get_layout_html_path(context) do
-      case Injector.app_layout_menu_inject(schema, File.read!(file_path)) do
-        {:ok, new_content} ->
-          print_injecting(file_path)
-          File.write!(file_path, new_content)
-
-        :already_injected ->
-          :ok
-
-        {:error, :unable_to_inject} ->
-          Mix.shell().info("""
-
-          #{Injector.app_layout_menu_help_text(file_path, schema)}
-          """)
-      end
+    if api? do
+      context
     else
-      {_dup, inject} = Injector.app_layout_menu_code_to_inject(schema)
+      schema = context.schema
 
-      missing =
-        context
-        |> potential_layout_file_paths()
-        |> Enum.map_join("\n", &"  * #{&1}")
+      if file_path = get_layout_html_path(context) do
+        case Injector.app_layout_menu_inject(schema, File.read!(file_path)) do
+          {:ok, new_content} ->
+            print_injecting(file_path)
+            File.write!(file_path, new_content)
 
-      Mix.shell().error("""
+          :already_injected ->
+            :ok
 
-      Unable to find an application layout file to inject user menu items.
+          {:error, :unable_to_inject} ->
+            Mix.shell().info("""
 
-      Missing files:
+            #{Injector.app_layout_menu_help_text(file_path, schema)}
+            """)
+        end
+      else
+        {_dup, inject} = Injector.app_layout_menu_code_to_inject(schema)
 
-      #{missing}
+        missing =
+          context
+          |> potential_layout_file_paths()
+          |> Enum.map_join("\n", &"  * #{&1}")
 
-      Please ensure this phoenix app was not generated with
-      --no-html. If you have changed the name of your application
-      layout file, please add the following code to it where you'd
-      like the #{schema.singular} menu items to be rendered.
+        Mix.shell().error("""
 
-      #{inject}
-      """)
+        Unable to find an application layout file to inject user menu items.
+
+        Missing files:
+
+        #{missing}
+
+        If you have changed the name of your application layout file,
+        please add the following code to it where you'd like the
+        #{schema.singular} menu items to be rendered.
+
+        #{inject}
+        """)
+      end
+
+      context
     end
-
-    context
   end
 
   defp get_layout_html_path(%Context{} = context) do
@@ -835,7 +840,7 @@ defmodule Mix.Tasks.Phx.Gen.Auth do
         mix phx.new my_app --umbrella
         mix phx.new my_app --database mysql
 
-    Apps generated with --no-ecto or --no-html are not supported.
+    Apps generated with --no-ecto are not supported.
     """)
   end
 
@@ -877,6 +882,11 @@ defmodule Mix.Tasks.Phx.Gen.Auth do
           end
       end
 
+    Map.put(schema, :opts, opts)
+  end
+
+  defp put_api_option(schema) do
+    opts = schema.opts |> Keyword.put(:api, true) |> Keyword.put_new(:live, false)
     Map.put(schema, :opts, opts)
   end
 end
