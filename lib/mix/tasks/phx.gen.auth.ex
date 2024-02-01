@@ -265,14 +265,7 @@ defmodule Mix.Tasks.Phx.Gen.Auth do
       "schema.ex": [context.dir, "#{singular}.ex"],
       "schema_token.ex": [context.dir, "#{singular}_token.ex"],
       "auth.ex": [web_pre, web_path, "#{singular}_auth.ex"],
-      "auth_test.exs": [web_test_pre, web_path, "#{singular}_auth_test.exs"],
-      "session_controller.ex": [controller_pre, "#{singular}_session_controller.ex"],
-      "session_controller_test.exs": [
-        web_test_pre,
-        "controllers",
-        web_path,
-        "#{singular}_session_controller_test.exs"
-      ]
+      "auth_test.exs": [web_test_pre, web_path, "#{singular}_auth_test.exs"]
     ]
 
     case Keyword.fetch(context.opts, :api) do
@@ -289,6 +282,17 @@ defmodule Mix.Tasks.Phx.Gen.Auth do
             "#{singular}_registration_controller_test.exs"
           ],
           "registration_json.ex": [controller_pre, "#{singular}_registration_json.ex"],
+          "session_controller_api.ex": [
+            controller_pre,
+            "#{singular}_session_controller.ex"
+          ],
+          "session_controller_api_test.exs": [
+            web_test_pre,
+            "controllers",
+            web_path,
+            "#{singular}_session_controller_test.exs"
+          ],
+          "session_json.ex": [controller_pre, "#{singular}_session_json.ex"],
         ]
 
         remap_files(default_files ++ api_files)
@@ -297,6 +301,13 @@ defmodule Mix.Tasks.Phx.Gen.Auth do
         case Keyword.fetch(context.opts, :live) do
           {:ok, true} ->
             live_files = [
+              "session_controller.ex": [controller_pre, "#{singular}_session_controller.ex"],
+              "session_controller_test.exs": [
+                web_test_pre,
+                "controllers",
+                web_path,
+                "#{singular}_session_controller_test.exs"
+              ],
               "registration_live.ex": [
                 web_pre,
                 "live",
@@ -434,6 +445,13 @@ defmodule Mix.Tasks.Phx.Gen.Auth do
                 controller_pre,
                 "#{singular}_reset_password_html",
                 "new.html.heex"
+              ],
+              "session_controller.ex": [controller_pre, "#{singular}_session_controller.ex"],
+              "session_controller_test.exs": [
+                web_test_pre,
+                "controllers",
+                web_path,
+                "#{singular}_session_controller_test.exs"
               ],
               "session_html.ex": [controller_pre, "#{singular}_session_html.ex"],
               "session_new.html.heex": [
