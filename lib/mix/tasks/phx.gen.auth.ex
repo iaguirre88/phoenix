@@ -293,6 +293,17 @@ defmodule Mix.Tasks.Phx.Gen.Auth do
             "#{singular}_session_controller_test.exs"
           ],
           "session_json.ex": [controller_pre, "#{singular}_session_json.ex"],
+          "confirmation_controller_api.ex": [
+            controller_pre,
+            "#{singular}_confirmation_controller.ex"
+          ],
+          "confirmation_controller_api_test.exs": [
+            web_test_pre,
+            "controllers",
+            web_path,
+            "#{singular}_confirmation_controller_test.exs"
+          ],
+          "confirmation_json.ex": [controller_pre, "#{singular}_confirmation_json.ex"]
         ]
 
         remap_files(default_files ++ api_files)
