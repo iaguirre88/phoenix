@@ -303,7 +303,18 @@ defmodule Mix.Tasks.Phx.Gen.Auth do
             web_path,
             "#{singular}_confirmation_controller_test.exs"
           ],
-          "confirmation_json.ex": [controller_pre, "#{singular}_confirmation_json.ex"]
+          "confirmation_json.ex": [controller_pre, "#{singular}_confirmation_json.ex"],
+          "reset_password_controller_api.ex": [
+            controller_pre,
+            "#{singular}_reset_password_controller.ex"
+          ],
+          "reset_password_controller_api_test.exs": [
+            web_test_pre,
+            "controllers",
+            web_path,
+            "#{singular}_reset_password_controller_test.exs"
+          ],
+          "reset_password_json.ex": [controller_pre, "#{singular}_reset_password_json.ex"]
         ]
 
         remap_files(default_files ++ api_files)

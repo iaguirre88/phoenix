@@ -586,6 +586,28 @@ defmodule Mix.Tasks.Phx.Gen.AuthTest do
         assert file =~ "def create(%{message: message}) do"
         assert file =~ "def error(%{message: message}) do"
       end)
+
+      assert_file("lib/my_app_web/controllers/user_reset_password_controller.ex", fn file ->
+        assert file =~ "Accounts.deliver_user_reset_password_instructions"
+        assert file =~ "Accounts.reset_user_password"
+        assert file =~ "Accounts.get_user_by_reset_password_token"
+      end)
+
+      assert_file("test/my_app_web/controllers/user_reset_password_controller_test.exs", fn file ->
+        assert file =~ "post(conn, ~p\"/api/users/reset_password\""
+        assert file =~ "assert json_response(conn, 201)[\"message\"] =~ \"If your email is in our system\""
+        assert file =~ "put(conn, ~p\"/api/users/reset_password/\#{token}\""
+        assert file =~ "assert json_response(conn, 200)[\"message\"] == \"Password reset successfully.\""
+        assert file =~ "put(conn, ~p\"/api/users/reset_password/oops\")"
+        assert file =~ "assert json_response(conn, 422)[\"error\"]"
+        assert file =~ "Reset password link is invalid or it has expired."
+      end)
+
+      assert_file("lib/my_app_web/controllers/user_reset_password_json.ex", fn file ->
+        assert file =~ "defmodule MyAppWeb.UserResetPasswordJSON do"
+        assert file =~ "def show(%{message: message}) do"
+        assert file =~ "def error(%{message: message}) do"
+      end)
       # TO DO: check the other controllers and views
 
       assert [migration] = Path.wildcard("priv/repo/migrations/*_create_users_auth_tables.exs")
