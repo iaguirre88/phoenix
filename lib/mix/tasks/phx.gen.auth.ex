@@ -31,6 +31,8 @@ defmodule Mix.Tasks.Phx.Gen.Auth do
   to authentication views without necessarily triggering a new HTTP request
   each time (which would result in a full page load).
 
+  Those options will be ignored if the app was generated with `--no-html`.
+
   ## Mixing magic link and password registration
 
   `mix phx.gen.auth` generates email based authentication, which assumes the user who
@@ -157,7 +159,8 @@ defmodule Mix.Tasks.Phx.Gen.Auth do
     prefix: :string,
     live: :boolean,
     compile: :boolean,
-    scope: :string
+    scope: :string,
+    api: :boolean
   ]
 
   @doc false
@@ -177,7 +180,9 @@ defmodule Mix.Tasks.Phx.Gen.Auth do
 
     {context, schema} = Gen.Context.build(context_args ++ ["--no-scope"], __MODULE__)
 
-    context = put_live_option(context)
+    context =
+      if generated_with_no_html?(), do: put_api_option(context), else: put_live_option(context)
+
     Gen.Context.prompt_for_code_injection(context)
 
     if "--no-compile" not in args do
@@ -247,10 +252,6 @@ defmodule Mix.Tasks.Phx.Gen.Auth do
   defp validate_required_dependencies! do
     unless Code.ensure_loaded?(Ecto.Adapters.SQL) do
       raise_with_help("mix phx.gen.auth requires ecto_sql", :phx_generator_args)
-    end
-
-    if generated_with_no_html?() do
-      raise_with_help("mix phx.gen.auth requires phoenix_html", :phx_generator_args)
     end
   end
 
@@ -724,46 +725,49 @@ defmodule Mix.Tasks.Phx.Gen.Auth do
   end
 
   defp maybe_inject_app_layout_menu(%Context{} = context) do
-    schema = context.schema
+    api? = Keyword.get(context.opts, :api, false)
 
-    if file_path = get_layout_html_path(context) do
-      case Injector.app_layout_menu_inject(schema, File.read!(file_path)) do
-        {:ok, new_content} ->
-          print_injecting(file_path)
-          File.write!(file_path, new_content)
+    if not api? do
+      schema = context.schema
 
-        :already_injected ->
-          :ok
+      if file_path = get_layout_html_path(context) do
+        case Injector.app_layout_menu_inject(schema, File.read!(file_path)) do
+          {:ok, new_content} ->
+            print_injecting(file_path)
+            File.write!(file_path, new_content)
 
-        {:error, :unable_to_inject} ->
-          Mix.shell().info("""
+          :already_injected ->
+            :ok
 
-          #{Injector.app_layout_menu_help_text(file_path, schema)}
-          """)
-      end
-    else
-      {_dup, inject} = Injector.app_layout_menu_code_to_inject(schema)
+          {:error, :unable_to_inject} ->
+            Mix.shell().info("""
 
-      missing =
-        context
-        |> potential_layout_file_paths()
-        |> Enum.map_join("\n", &"  * #{&1}")
+            #{Injector.app_layout_menu_help_text(file_path, schema)}
+            """)
+        end
+      else
+        {_dup, inject} = Injector.app_layout_menu_code_to_inject(schema)
 
-      Mix.shell().error("""
+        missing =
+          context
+          |> potential_layout_file_paths()
+          |> Enum.map_join("\n", &"  * #{&1}")
+
+        Mix.shell().error("""
 
       Unable to find the root layout file to inject user menu items.
 
-      Missing files:
+        Missing files:
 
-      #{missing}
+        #{missing}
 
-      Please ensure this phoenix app was not generated with
-      --no-html. If you have changed the name of your root
-      layout file, please add the following code to it where you'd
+      If you have changed the name of your root layout file,
+      please add the following code to it where you'd
       like the #{schema.singular} menu items to be rendered.
 
-      #{inject}
-      """)
+        #{inject}
+        """)
+      end
     end
 
     context
@@ -1003,7 +1007,7 @@ defmodule Mix.Tasks.Phx.Gen.Auth do
         mix phx.new my_app --umbrella
         mix phx.new my_app --database mysql
 
-    Apps generated with --no-ecto or --no-html are not supported.
+    Apps generated with --no-ecto are not supported.
     """)
   end
 
@@ -1049,6 +1053,11 @@ defmodule Mix.Tasks.Phx.Gen.Auth do
           end
       end
 
+    Map.put(schema, :opts, opts)
+  end
+
+  defp put_api_option(schema) do
+    opts = schema.opts |> Keyword.put(:api, true) |> Keyword.put_new(:live, false)
     Map.put(schema, :opts, opts)
   end
 end

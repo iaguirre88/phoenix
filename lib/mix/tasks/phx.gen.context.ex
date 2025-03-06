@@ -95,7 +95,8 @@ defmodule Mix.Tasks.Phx.Gen.Context do
     primary_key: :string,
     migration: :boolean,
     scope: :string,
-    no_scope: :boolean
+    no_scope: :boolean,
+    api: :boolean
   ]
 
   @default_opts [schema: true, context: true]
