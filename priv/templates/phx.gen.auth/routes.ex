@@ -1,6 +1,30 @@
 
   ## Authentication routes
+<%= if api? do %>
+  scope <%= router_scope %> do
+    pipe_through [:api, :ignore_if_<%= schema.singular %>_is_authenticated]
 
+    post "/<%= schema.plural %>/register", <%= inspect schema.alias %>RegistrationController, :create
+    post "/<%= schema.plural %>/log-in", <%= inspect schema.alias %>SessionController, :create
+    post "/<%= schema.plural %>/update-password", <%= inspect schema.alias %>ResetPasswordController, :create
+    put "/<%= schema.plural %>/update-password/:token", <%= inspect schema.alias %>ResetPasswordController, :update
+  end
+
+  scope <%= router_scope %> do
+    pipe_through [:api, :fetch_api_user]
+
+    put "/<%= schema.plural %>/settings", <%= inspect schema.alias %>SettingsController, :update
+    get "/<%= schema.plural %>/settings/confirm-email/:token", <%= inspect schema.alias %>SettingsController, :confirm_email
+  end
+
+  scope <%= router_scope %> do
+    pipe_through [:api]
+
+    delete "/<%= schema.plural %>/log-out", <%= inspect schema.alias %>SessionController, :delete
+    post "/<%= schema.plural %>/confirm", <%= inspect schema.alias %>ConfirmationController, :create
+    post "/<%= schema.plural %>/confirm/:token", <%= inspect schema.alias %>ConfirmationController, :update
+  end
+<% else %>
   <%= if not live? do %>scope <%= router_scope %> do
     pipe_through [:browser, :redirect_if_<%= schema.singular %>_is_authenticated]
 
@@ -39,4 +63,4 @@
     get "/<%= schema.plural %>/log-in/:token", <%= inspect schema.alias %>SessionController, :confirm
     post "/<%= schema.plural %>/log-in", <%= inspect schema.alias %>SessionController, :create
     delete "/<%= schema.plural %>/log-out", <%= inspect schema.alias %>SessionController, :delete<% end %>
-  end
+  end<% end %>

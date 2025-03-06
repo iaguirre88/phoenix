@@ -99,7 +99,7 @@ defmodule Mix.Tasks.Phx.Gen.Context do
     api: :boolean
   ]
 
-  @default_opts [schema: true, context: true]
+  @default_opts [schema: true, context: true, api: false]
 
   @doc false
   def run(args) do
