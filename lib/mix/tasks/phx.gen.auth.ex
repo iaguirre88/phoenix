@@ -460,95 +460,113 @@ defmodule Mix.Tasks.Phx.Gen.Auth do
           []
         end
 
-    case Keyword.fetch(context.opts, :live) do
+    case Keyword.fetch(context.opts, :api) do
       {:ok, true} ->
-        live_files = [
-          "registration_live.ex": [
-            web_pre,
-            "live",
-            web_path,
-            "#{singular}_live",
-            "registration.ex"
-          ],
-          "registration_live_test.exs": [
-            web_test_pre,
-            "live",
-            web_path,
-            "#{singular}_live",
-            "registration_test.exs"
-          ],
-          "login_live.ex": [web_pre, "live", web_path, "#{singular}_live", "login.ex"],
-          "login_live_test.exs": [
-            web_test_pre,
-            "live",
-            web_path,
-            "#{singular}_live",
-            "login_test.exs"
-          ],
-          "settings_live.ex": [web_pre, "live", web_path, "#{singular}_live", "settings.ex"],
-          "settings_live_test.exs": [
-            web_test_pre,
-            "live",
-            web_path,
-            "#{singular}_live",
-            "settings_test.exs"
-          ],
-          "confirmation_live.ex": [
-            web_pre,
-            "live",
-            web_path,
-            "#{singular}_live",
-            "confirmation.ex"
-          ],
-          "confirmation_live_test.exs": [
-            web_test_pre,
-            "live",
-            web_path,
-            "#{singular}_live",
-            "confirmation_test.exs"
-          ]
-        ]
-
-        remap_files(default_files ++ live_files)
+        remap_files(default_files)
 
       _ ->
-        non_live_files = [
-          "registration_new.html.heex": [
-            controller_pre,
-            "#{singular}_registration_html",
-            "new.html.heex"
-          ],
-          "registration_controller.ex": [controller_pre, "#{singular}_registration_controller.ex"],
-          "registration_controller_test.exs": [
-            web_test_pre,
-            "controllers",
-            web_path,
-            "#{singular}_registration_controller_test.exs"
-          ],
-          "registration_html.ex": [controller_pre, "#{singular}_registration_html.ex"],
-          "session_html.ex": [controller_pre, "#{singular}_session_html.ex"],
-          "session_new.html.heex": [controller_pre, "#{singular}_session_html", "new.html.heex"],
-          "session_confirm.html.heex": [
-            controller_pre,
-            "#{singular}_session_html",
-            "confirm.html.heex"
-          ],
-          "settings_html.ex": [web_pre, "controllers", web_path, "#{singular}_settings_html.ex"],
-          "settings_controller.ex": [controller_pre, "#{singular}_settings_controller.ex"],
-          "settings_edit.html.heex": [
-            controller_pre,
-            "#{singular}_settings_html",
-            "edit.html.heex"
-          ],
-          "settings_controller_test.exs": [
-            web_test_pre,
-            "controllers",
-            web_path,
-            "#{singular}_settings_controller_test.exs"
-          ]
-        ]
+        case Keyword.fetch(context.opts, :live) do
+          {:ok, true} ->
+            live_files = [
+              "registration_live.ex": [
+                web_pre,
+                "live",
+                web_path,
+                "#{singular}_live",
+                "registration.ex"
+              ],
+              "registration_live_test.exs": [
+                web_test_pre,
+                "live",
+                web_path,
+                "#{singular}_live",
+                "registration_test.exs"
+              ],
+              "login_live.ex": [web_pre, "live", web_path, "#{singular}_live", "login.ex"],
+              "login_live_test.exs": [
+                web_test_pre,
+                "live",
+                web_path,
+                "#{singular}_live",
+                "login_test.exs"
+              ],
+              "settings_live.ex": [web_pre, "live", web_path, "#{singular}_live", "settings.ex"],
+              "settings_live_test.exs": [
+                web_test_pre,
+                "live",
+                web_path,
+                "#{singular}_live",
+                "settings_test.exs"
+              ],
+              "confirmation_live.ex": [
+                web_pre,
+                "live",
+                web_path,
+                "#{singular}_live",
+                "confirmation.ex"
+              ],
+              "confirmation_live_test.exs": [
+                web_test_pre,
+                "live",
+                web_path,
+                "#{singular}_live",
+                "confirmation_test.exs"
+              ]
+            ]
 
-        remap_files(default_files ++ non_live_files)
+            remap_files(default_files ++ live_files)
+
+          _ ->
+            non_live_files = [
+              "registration_new.html.heex": [
+                controller_pre,
+                "#{singular}_registration_html",
+                "new.html.heex"
+              ],
+              "registration_controller.ex": [
+                controller_pre,
+                "#{singular}_registration_controller.ex"
+              ],
+              "registration_controller_test.exs": [
+                web_test_pre,
+                "controllers",
+                web_path,
+                "#{singular}_registration_controller_test.exs"
+              ],
+              "registration_html.ex": [controller_pre, "#{singular}_registration_html.ex"],
+              "session_html.ex": [controller_pre, "#{singular}_session_html.ex"],
+              "session_new.html.heex": [
+                controller_pre,
+                "#{singular}_session_html",
+                "new.html.heex"
+              ],
+              "session_confirm.html.heex": [
+                controller_pre,
+                "#{singular}_session_html",
+                "confirm.html.heex"
+              ],
+              "settings_html.ex": [
+                web_pre,
+                "controllers",
+                web_path,
+                "#{singular}_settings_html.ex"
+              ],
+              "settings_controller.ex": [controller_pre, "#{singular}_settings_controller.ex"],
+              "settings_edit.html.heex": [
+                controller_pre,
+                "#{singular}_settings_html",
+                "edit.html.heex"
+              ],
+              "settings_controller_test.exs": [
+                web_test_pre,
+                "controllers",
+                web_path,
+                "#{singular}_settings_controller_test.exs"
+              ]
+            ]
+
+            remap_files(default_files ++ non_live_files)
+        end
     end
   end
 
