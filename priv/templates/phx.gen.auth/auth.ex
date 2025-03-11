@@ -107,6 +107,27 @@ defmodule <%= inspect auth_module %> do
     assign(conn, :current_scope, <%= inspect scope_config.scope.alias %>.for_<%= schema.singular %>(<%= schema.singular %>))
   end
 
+  @doc """
+  Authenticates the <%= schema.singular %> with the given token.
+  """
+  def fetch_api_<%= schema.singular %>(conn, _opts) do
+    with ["Bearer " <> token] <- get_req_header(conn, "authorization"),
+         {:ok, <%= schema.singular %>} <- <%= inspect context.alias %>.fetch_<%= schema.singular %>_by_api_token(token) do
+      assign(conn, :current_<%= schema.singular %>, <%= schema.singular %>)
+    else
+      _ ->
+        conn
+        |> send_resp(:unauthorized, "Unauthorized")
+        |> halt()
+    end
+  end
+
+  def ignore_if_<%= schema.singular %>_is_authenticated(conn, _opts) do
+    # TODO: check this
+    conn
+  end
+
+
   defp ensure_<%= schema.singular %>_token(conn) do
     if token = get_session(conn, :<%= schema.singular %>_token) do
       {token, conn}
