@@ -464,7 +464,21 @@ defmodule Mix.Tasks.Phx.Gen.Auth do
 
     case Keyword.fetch(context.opts, :api) do
       {:ok, true} ->
-        remap_files(default_files)
+        api_files = [
+          "registration_controller_api.ex": [
+            controller_pre,
+            "#{singular}_registration_controller.ex"
+          ],
+          "registration_controller_api_test.exs": [
+            web_test_pre,
+            "controllers",
+            web_path,
+            "#{singular}_registration_controller_test.exs"
+          ],
+          "registration_json.ex": [controller_pre, "#{singular}_registration_json.ex"]
+        ]
+
+        remap_files(default_files ++ api_files)
 
       _ ->
         case Keyword.fetch(context.opts, :live) do
