@@ -234,6 +234,7 @@ defmodule Mix.Tasks.Phx.Gen.Auth do
     |> maybe_inject_router_import(binding)
     |> maybe_inject_router_plug()
     |> maybe_inject_app_layout_menu()
+    |> maybe_inject_fallback_controller(paths, binding)
     |> Gen.Notifier.maybe_print_mailer_installation_instructions()
     |> print_shell_instructions()
   end
@@ -787,6 +788,35 @@ defmodule Mix.Tasks.Phx.Gen.Auth do
         #{inject}
         """)
       end
+    end
+
+    context
+  end
+
+  defp maybe_inject_fallback_controller(
+         %Context{context_app: context_app} = context,
+         paths,
+         binding
+       ) do
+    api? = Keyword.get(context.opts, :api, false)
+
+    if api? do
+      web = Mix.Phoenix.web_path(context_app)
+
+      binding =
+        [
+          core_components?:
+            Code.ensure_loaded?(Module.concat(context.web_module, "CoreComponents")),
+          gettext?: Code.ensure_loaded?(Module.concat(context.web_module, "Gettext"))
+        ] ++ binding
+
+      files = [
+        {:new_eex, "changeset_json.ex", Path.join([web, "controllers/changeset_json.ex"])},
+        {:new_eex, "fallback_controller.ex",
+         Path.join([web, "controllers/fallback_controller.ex"])}
+      ]
+
+      Mix.Phoenix.copy_from(paths, "priv/templates/phx.gen.json", binding, files)
     end
 
     context
